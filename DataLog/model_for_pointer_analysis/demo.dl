@@ -1,0 +1,3 @@
+VarPointsTo(x, o) :- New(x, o).
+
+VarPointsTo(x, o) :-

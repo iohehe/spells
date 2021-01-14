@@ -1,0 +1,7 @@
+New(b:V, o1:O)
+New(c:V, o3:O)
+Assign(a:V, b:V)
+Assign(d:V, c:V)
+Store(c:V, f:F, a:V)
+Store(c:V, f:F, d:V)
+Load(e:V, d:V, f:F)
