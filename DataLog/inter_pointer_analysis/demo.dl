@@ -1,0 +1,52 @@
+//class A {
+//    static void main() {
+//        A a = new A();
+//        A b = new B();
+//        A c = b.foo(a);
+//    }
+//    void foo(A x) { ... }
+//}
+//class B extends A {
+//    A foo(A y) {
+//        A r = new A();
+//        return r;
+//    }
+//}
+//}
+
+//declare
+.type V <: symbol
+.type F <: symbol
+.type O <: symbol
+//---inter
+.type S <: number
+.type M <: symbol
+
+
+// EDB: predicates
+.decl New(x:V, o:O)
+.decl Assign(x:V, y:V)
+.decl Store(x:V, f:F, y:V)
+.decl Load(x:V, y:V, f:F)
+//----inter
+.decl VCall(l:S, x:V, k:M)
+.decl Dispatch(o:O, k:M, m:M)
+.decl ThisVar(m:M, this:V)
+
+// facts
+New("a", "o3").
+New("b", "o4").
+New("r", "o11").
+VCall(5, "b", "b.foo(a)").
+Dispatch("o4", "b.foo(a)", "B.foo(A)").
+ThisVar("B.foo(A)", "B.foo/this").
+
+// IDB: predicates
+.decl VarPointsTo(x:V, o:O) output
+.decl FileldPointsTo(oi:O, f:F, oj:O) output
+.decl Reachable(m:M) output 
+.decl CallGraph(l:S, m:M) output
+
+// rules
+VarPointsTo(x, o) :- New(x, o).
+VarPointsTo(this, o), Reachable(m), CallGraph(l, m) :- VCall(l, x, k), VarPointsTo(x, o), Dispatch(o, k, m), ThisVar(m, this).
