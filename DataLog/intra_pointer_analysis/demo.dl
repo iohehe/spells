@@ -1,0 +1,37 @@
+// b = new C();
+// a = b;
+// c= new C();
+// c.f = a;
+// d = c;
+// c.f = d;
+// e = d.f;
+
+// declare
+.type V <: symbol
+.type F <: symbol
+.type O <: symbol
+
+// EDB: predicates
+.decl New(x: V, o: O)
+.decl Assign(x:V, y:V)
+.decl Store(x:V, f:F, y:V)
+.decl Load(x:V, y:V, f:F)
+
+// facts
+New("b", "o1").
+New("c", "o3").
+Assign("a", "b").
+Assign("d", "c").
+Store("c", "f", "a").
+Store("c", "f", "d").
+Load("e", "d", "f").
+
+// IDB: predicates
+.decl VarPointsTo(x:V, o:O) output
+.decl FieldPointsTo(oi:O, f:F, oj:O) output
+
+// rules
+VarPointsTo(x, o) :- New(x, o).
+VarPointsTo(x, o) :- Assign(x, y), VarPointsTo(y, o).
+FieldPointsTo(oi, f, oj) :- Store(x, f, y),VarPointsTo(x, oi), VarPointsTo(y, oj).
+VarPointsTo(y, oj) :- Load(y, x, f), VarPointsTo(x, oi), FieldPointsTo(oi, f, oj).
