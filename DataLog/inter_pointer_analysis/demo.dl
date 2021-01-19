@@ -21,6 +21,7 @@
 //---inter
 .type S <: number
 .type M <: symbol
+.type N <: number
 
 
 // EDB: predicates
@@ -33,6 +34,9 @@
 .decl Dispatch(o:O, k:M, m:M)
 .decl ThisVar(m:M, this:V)
 
+.decl Argument(l:S, i:N, a:V)
+.decl Parameter(m:M, i:N, p:V)
+
 // facts
 New("a", "o3").
 New("b", "o4").
@@ -40,6 +44,8 @@ New("r", "o11").
 VCall(5, "b", "b.foo(a)").
 Dispatch("o4", "b.foo(a)", "B.foo(A)").
 ThisVar("B.foo(A)", "B.foo/this").
+Argument(5, 1, "a").
+Parameter("B.foo(A)", 1, "y").
 
 // IDB: predicates
 .decl VarPointsTo(x:V, o:O) output
@@ -50,3 +56,4 @@ ThisVar("B.foo(A)", "B.foo/this").
 // rules
 VarPointsTo(x, o) :- New(x, o).
 VarPointsTo(this, o), Reachable(m), CallGraph(l, m) :- VCall(l, x, k), VarPointsTo(x, o), Dispatch(o, k, m), ThisVar(m, this).
+VarPointsTo(pi, o) :- CallGraph(l, m), Argument(l, i, ai), Parameter(m, i, pi), VarPointsTo(ai, o).
