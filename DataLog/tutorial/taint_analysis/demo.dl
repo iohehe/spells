@@ -1,0 +1,74 @@
+//void main() {
+//    A x = new A();
+//    String pw = getPassword();
+//    A y = x;
+//    x.f = pw;
+//    String s = y.f;
+//    log(s);
+//}
+//String getPassword() {
+//    ...
+//    return new String(...);
+//}
+//class A {
+//    String f;
+//}
+
+//declare
+.type V <: symbol
+.type F <: symbol
+.type O <: symbol
+.type S <: number // call site
+.type M <: symbol // method
+.type N <: symbol //ith
+
+//EDB: predicates
+.decl New(x:V, o:O)
+.decl Assign(x:V, y:V)
+.decl Store(x:V, f:F, y:V)
+.decl Load(x:V, y:V, f:F)
+.decl SCall(l:S, k:M)
+.decl Dispatch(k:M, m:M)
+.decl ThisVar(m:M, this:V)
+.decl Argument(l:S, i:N, a:V)
+.decl Parameter(m:M, i:N, p:V)
+.decl MethodReturn(m:M, ret:V)
+.decl CallReturn(l:S, r:V)
+//-- Taint Analysis
+.decl Source(m:M)
+.decl Sink(m:M)
+.decl Taint(l:S, t:O)
+
+// facts
+New("x", "o2").
+New("getPassword()/return", "o11").
+Assign("y", "x").
+Store("x", "f", "pw").
+Load("s", "y", "f").
+SCall(3, "getPassword()").
+Dispatch("getPassword()", "getPassword()").
+MethodReturn("getPassword()", "getPassword()/return").
+CallReturn(3, "pw").
+CallGraph(7, "log(String)").
+Argument(3, 1, "s").
+
+Source("getPassword()").
+Sink("log(String)").
+Taint(3, "t3").
+
+// IDB: predicates
+.decl VarPointsTo(x:V, o:O) output
+.decl FileldPointsTo(oi:O, x:V, oj:O) output
+.decl Reachable(m:M) output
+.decl CallGraph(l:S, m:M) output
+.decl TaintFlow(m:M, t:O) output
+
+//rules
+VarPointsTo(x, o) :- New(x, o).
+VarPointsTo(x, o) :- Assign(x, y), VarPointsTo(y, o).
+FileldPointsTo(oi, x, oj) :- Store(x, f, y), VarPointsTo(x, oi), VarPointsTo(y, oj).
+VarPointsTo(y, oj) :- Load(y, x, f), VarPointsTo(x, oi),FileldPointsTo(oi,f,oj).
+Reachable(m), CallGraph(l, m) :- SCall(l, k),Dispatch(k, m).
+VarPointsTo(r, o) :- CallGraph(l, m), MethodReturn(m, ret), VarPointsTo(ret, o),CallReturn(l, r).
+VarPointsTo(r, t) :- CallGraph(l, m), Source(m), CallReturn(l, r),Taint(l, t).
+//TaintFlow(m) :- CallGraph(l, m), Sink(m),Argument(l, _, ai), VarPointsTo(ai, t), Taint(_, t).

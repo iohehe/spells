@@ -1,0 +1,18 @@
+//  symbol declare
+.type P <: symbol
+.type A <: number
+
+// EDB predict
+.decl Age(person: P, age: A)
+
+// facts
+Age("Xiaoming", 18).
+Age("Xiaohong", 23).
+Age("Alan", 16).
+Age("Abao", 31).
+
+// IDB predict
+.decl Audlt(person: P, age: A) output
+
+// rules
+Audlt(person, age) :- Age(person, age), age>=18.

@@ -29,13 +29,16 @@
 .decl Assign(x:V, y:V)
 .decl Store(x:V, f:F, y:V)
 .decl Load(x:V, y:V, f:F)
-//----inter
+//---inter
 .decl VCall(l:S, x:V, k:M)
 .decl Dispatch(o:O, k:M, m:M)
 .decl ThisVar(m:M, this:V)
-
+//---arg->param
 .decl Argument(l:S, i:N, a:V)
 .decl Parameter(m:M, i:N, p:V)
+//---return
+.decl MethodReturn(m:M, ret:V)
+.decl CallReturn(l:S, r:V)
 
 // facts
 New("a", "o3").
@@ -46,6 +49,9 @@ Dispatch("o4", "b.foo(a)", "B.foo(A)").
 ThisVar("B.foo(A)", "B.foo/this").
 Argument(5, 1, "a").
 Parameter("B.foo(A)", 1, "y").
+MethodReturn("B.foo(A)", "r").
+CallReturn(5, "c").
+
 
 // IDB: predicates
 .decl VarPointsTo(x:V, o:O) output
@@ -57,3 +63,4 @@ Parameter("B.foo(A)", 1, "y").
 VarPointsTo(x, o) :- New(x, o).
 VarPointsTo(this, o), Reachable(m), CallGraph(l, m) :- VCall(l, x, k), VarPointsTo(x, o), Dispatch(o, k, m), ThisVar(m, this).
 VarPointsTo(pi, o) :- CallGraph(l, m), Argument(l, i, ai), Parameter(m, i, pi), VarPointsTo(ai, o).
+VarPointsTo(r, o) :- CallGraph(l, m), MethodReturn(m, ret),VarPointsTo(ret, o), CallReturn(l, r).

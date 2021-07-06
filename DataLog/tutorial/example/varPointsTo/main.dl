@@ -1,0 +1,50 @@
+// ====== Encoded code fragment ======
+// v1 = h1();
+// v2 = h2();
+// v1 = v2;
+// v3 = h3();
+// v1.f = v3;
+// v4 = v1.f;
+
+
+.type var <: symbol
+.type field <: symbol
+.type obj <: symbol
+
+
+// ---- inputs ----
+.decl assign(a:var, b:var)
+.decl new(v:var, o:obj)
+.decl load(a:var, b:var, f:field)
+.decl store(a:var, f:field, b:var)
+
+
+// --- facts ---
+assign("v1", "v2").
+new("v1", "h1").
+new("v2", "h2").
+new("v3", "h3").
+
+load("v1", "f", "v3").
+store("v4", "v1", "f").
+
+
+// --- rules ---
+
+// alias analysis
+.decl alias(a:var, b:var) output
+
+alias(X, X) :- assign(X, _).
+alias(Y, Y) :- assign(_, Y).
+alias(X, Y) :- assign(X, Y).
+
+// X = A.F; A = B; B.F = Y
+alias(X, Y) :- load(X, A, F), alias(A, B), store(B, F, Y).
+
+
+// point analysis
+.decl pointsTo(a: var, b:obj)
+.output pointsTo
+pointsTo(X, Y) :- new(X, Y).
+pointsTo(X, Y) :- alias(X, Z), pointsTo(Z, Y).
+
